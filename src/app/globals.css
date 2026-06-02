@@ -1,0 +1,128 @@
+@import "tailwindcss";
+@source "../**/*.{ts,tsx}";
+
+@theme {
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-2);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--surface);
+  --color-text-primary: var(--fg);
+  --color-text-secondary: var(--muted);
+  --color-text-tertiary: var(--border);
+  --color-border: var(--border);
+  --color-status-error: var(--danger);
+
+  --color-day-1: var(--day-1);
+  --color-day-2: var(--day-2);
+  --color-day-3: var(--day-3);
+  --color-day-4: var(--day-4);
+  --color-day-5: var(--day-5);
+  --color-day-6: var(--day-6);
+  --color-day-7: var(--day-7);
+  --color-day-8: var(--day-8);
+
+  --shadow-soft: var(--shadow);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  --radius-xl: var(--r-xl);
+  --radius-lg: var(--r-lg);
+  --radius-md: var(--r-md);
+}
+
+@layer base {
+  :root {
+    --bg: oklch(99% 0.002 240);
+    --surface: oklch(100% 0 0);
+    --surface-2: oklch(97% 0.004 240);
+    --fg: oklch(18% 0.012 250);
+    --muted: oklch(54% 0.012 250);
+    --border: oklch(91% 0.006 250);
+    --accent: oklch(58% 0.18 255);
+    --accent-2: oklch(68% 0.12 190);
+    --ok: oklch(66% 0.15 150);
+    --warn: oklch(78% 0.16 78);
+    --danger: oklch(62% 0.19 28);
+    --shadow: 0 18px 48px rgba(15,23,42,.07);
+    --r-xl: 28px;
+    --r-lg: 20px;
+    --r-md: 14px;
+    --sidebar: 280px;
+    --topbar: 76px;
+    --font-display: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    --font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --day-1: oklch(64% 0.19 28);
+    --day-2: oklch(62% 0.17 255);
+    --day-3: oklch(63% 0.15 150);
+    --day-4: oklch(61% 0.16 300);
+    --day-5: oklch(72% 0.16 78);
+    --day-6: oklch(60% 0.20 340);
+    --day-7: oklch(64% 0.14 200);
+    --day-8: oklch(48% 0.08 50);
+  }
+  
+  :root.dark, [data-theme="dark"] {
+    --bg: oklch(19% 0.016 255);
+    --surface: oklch(24% 0.015 255);
+    --surface-2: oklch(28% 0.014 255);
+    --fg: oklch(96% 0.004 255);
+    --muted: oklch(74% 0.011 255);
+    --border: oklch(35% 0.012 255);
+    --accent: oklch(70% 0.16 255);
+    --accent-2: oklch(72% 0.11 190);
+    --shadow: 0 22px 54px rgba(0,0,0,.28);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input, textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .eyebrow {
+    font: 700 11px/1 var(--font-mono);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill {
+    padding: 9px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  
+  .tag {
+    padding: 7px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+}

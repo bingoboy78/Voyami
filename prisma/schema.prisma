@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?  @unique
+  avatarColor  String
+  initials     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants      TripParticipant[]
+  messages          ChatMessage[]
+  notes             Note[]
+  expensesPaid      Expense[]
+  expenseShares     ExpenseParticipant[]
+  suggestions       Suggestion[]
+  aiRequests        AIRequestLog[]
+  documentsUploaded Document[]
+}
+
+model Trip {
+  id           String   @id @default(cuid())
+  name         String
+  country      String
+  route        String
+  duration     Int
+  totalBudget  Float?
+  currency     String   @default("EUR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants TripParticipant[]
+  days         Day[]
+  places       Place[]
+  documents    Document[]
+  messages     ChatMessage[]
+  notes        Note[]
+  expenses     Expense[]
+  suggestions  Suggestion[]
+  aiRequests   AIRequestLog[]
+}
+
+model TripParticipant {
+  id        String   @id @default(cuid())
+  tripId    String
+  userId    String
+  role      String   // "OWNER" or "MEMBER"
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+}
+
+model Day {
+  id        String    @id @default(cuid())
+  tripId    String
+  dayNumber Int
+  title     String
+  subtitle  String?
+  date      DateTime?
+  tip       String?
+  createdAt DateTime  @default(now())
+
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
+  documents  Document[]
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  dayId       String
+  time        String   // e.g. "09:00"
+  category    String   // e.g. "Транспорт", "Обед"
+  title       String
+  description String?
+  tags        String   // comma-separated tags
+  order       Int      @default(0)
+  latitude      Float?
+  longitude     Float?
+  locationQuery String?  // English geocodable address, e.g. "Skanderbeg Square, Tirana"
+  createdAt     DateTime @default(now())
+
+  day         Day          @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  suggestions Suggestion[]
+}
+
+model Place {
+  id          String   @id @default(cuid())
+  tripId      String
+  name        String
+  category    String   // "RESTAURANT", "COFFEE", "SPOT", "PRACTICAL"
+  description String?
+  tags        String   // comma-separated
+  price       String?
+  createdAt   DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id                 String   @id @default(cuid())
+  tripId             String
+  uploadedById       String
+  relatedDayId       String?
+  title              String
+  fileName           String
+  fileType           String   // e.g. "PDF", "IMG"
+  fileUrl            String?
+  category           String   // "TICKETS", "HOTELS", "TRANSPORT", "INSURANCE", "OTHER"
+  size               Int?
+  isOfflineAvailable Boolean  @default(false)
+  isPinned           Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  trip       Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  uploadedBy User  @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  relatedDay Day?  @relation(fields: [relatedDayId], references: [id], onDelete: SetNull)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  tripId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  trip   Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  tripId    String
+  authorId  String
+  title     String
+  content   String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trip   Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  tripId      String
+  paidById    String
+  amount      Float
+  currency    String   @default("EUR")
+  category    String   // "HOTEL", "RESTAURANT", "TRANSPORT", "ENTRANCE", "OTHER"
+  description String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip         Trip                 @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidBy       User                 @relation(fields: [paidById], references: [id], onDelete: Cascade)
+  participants ExpenseParticipant[]
+}
+
+model ExpenseParticipant {
+  id        String @id @default(cuid())
+  expenseId String
+  userId    String
+  share     Float
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+}
+
+model Suggestion {
+  id         String   @id @default(cuid())
+  tripId     String
+  authorId   String
+  activityId String?
+  content    String
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  activity Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+}
+
+model AIRequestLog {
+  id            String   @id @default(cuid())
+  tripId        String
+  requestedById String
+  action        String
+  prompt        String?
+  response      String
+  tokensUsed    Int?
+  createdAt     DateTime @default(now())
+
+  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  requestedBy User @relation(fields: [requestedById], references: [id], onDelete: Cascade)
+}

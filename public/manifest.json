@@ -1,0 +1,25 @@
+{
+  "name": "Albania Travel Hub",
+  "short_name": "Travel Hub",
+  "description": "Shared travel guide and trip hub for group trips",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#58b0f7",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/globe.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
