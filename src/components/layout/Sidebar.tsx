@@ -54,7 +54,20 @@ export function Sidebar() {
     };
 
     window.addEventListener('trip-updated', handleUpdate);
-    return () => window.removeEventListener('trip-updated', handleUpdate);
+
+    // Initialize theme from localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+
+    return () => {
+      window.removeEventListener('trip-updated', handleUpdate);
+    };
   }, []);
 
   return (
@@ -103,6 +116,7 @@ export function Sidebar() {
           <button 
             onClick={() => {
               const isDark = document.documentElement.classList.toggle('dark');
+              localStorage.setItem('theme', isDark ? 'dark' : 'light');
               window.dispatchEvent(new CustomEvent('show-toast', { 
                 detail: isDark ? 'Тёмная тема включена' : 'Светлая тема включена' 
               }));

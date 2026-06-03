@@ -33,9 +33,9 @@ export default async function DashboardPage() {
   }
 
   // Calculate stats
-  // Get all activities count for active day (let's assume Day 2 is "today" for mock purposes)
+  // Get all activities count for active day (let's assume Day 1 is "today" for default dashboard purposes)
   const todayDay = await prisma.day.findFirst({
-    where: { tripId: trip.id, dayNumber: 2 },
+    where: { tripId: trip.id, dayNumber: 1 },
     include: { _count: { select: { activities: true } } }
   });
   const todayActivitiesCount = todayDay?._count.activities || 0;
@@ -50,11 +50,12 @@ export default async function DashboardPage() {
     where: { tripId: trip.id }
   });
 
-  // Find next event (e.g. lunch in Mullixhiu)
-  const nextEvent = await prisma.activity.findFirst({
-    where: {
-      title: { contains: 'Mullixhiu' }
-    }
+  // Find next event (first activity on the active day or first in the trip)
+  const nextEvent = todayDay ? await prisma.activity.findFirst({
+    where: { dayId: todayDay.id },
+    orderBy: { time: 'asc' }
+  }) : await prisma.activity.findFirst({
+    orderBy: { createdAt: 'asc' }
   });
 
   // Get important documents
@@ -80,7 +81,7 @@ export default async function DashboardPage() {
           <div className="flex gap-2 flex-wrap mt-[18px]">
             <span className="px-[10px] py-2 rounded-full bg-surface border border-border text-[12px]">{trip.route}</span>
             <span className="px-[10px] py-2 rounded-full bg-surface border border-border text-[12px]">{trip.duration} дня</span>
-            <span className="px-[10px] py-2 rounded-full bg-surface border border-border text-[12px]">3 пары</span>
+            <span className="px-[10px] py-2 rounded-full bg-surface border border-border text-[12px]">{trip.country}</span>
             <span className="px-[10px] py-2 rounded-full bg-surface border border-border text-[12px]">Offline ready</span>
           </div>
           <div className="flex gap-[10px] flex-wrap mt-5">
@@ -97,17 +98,16 @@ export default async function DashboardPage() {
           {nextEvent && (
             <div className="lg:absolute lg:right-[22px] lg:top-[22px] mt-6 lg:mt-0 w-full lg:w-[250px] p-[14px] border border-border rounded-[18px] shadow-soft"
                  style={{ backgroundColor: 'color-mix(in oklab, var(--color-surface) 92%, transparent)' }}>
-              <strong className="block text-[14px]">Ближайшее событие</strong>
-              <span className="block text-text-secondary text-[12px] mt-[6px] leading-[1.4]">
-                Сегодня, {nextEvent.time} · {nextEvent.title} · бронь подтверждена
-              </span>
-              <div className="flex items-center gap-2 mt-3 text-text-secondary text-[12px]">
-                <div className="w-[8px] h-[8px] rounded-full bg-[var(--ok)] shadow-[0_0_0_4px_color-mix(in_oklab,var(--ok)_16%,transparent)] relative z-10"></div>
-                Тирана
-                <i className="h-[2px] bg-border flex-1 mx-1"></i>
-                Берат
-                <div className="w-[8px] h-[8px] rounded-full bg-primary relative z-10"></div>
-              </div>
+               <strong className="block text-[14px]">Ближайшее событие</strong>
+               <span className="block text-text-secondary text-[12px] mt-[6px] leading-[1.4]">
+                 {nextEvent.time} · {nextEvent.title}
+               </span>
+               {nextEvent.locationQuery && (
+                 <div className="flex items-center gap-2 mt-3 text-text-secondary text-[12px]">
+                   <div className="w-[8px] h-[8px] rounded-full bg-[var(--ok)] shadow-[0_0_0_4px_color-mix(in_oklab,var(--ok)_16%,transparent)] relative z-10"></div>
+                   {nextEvent.locationQuery}
+                 </div>
+               )}
             </div>
           )}
         </div>
@@ -184,21 +184,29 @@ export default async function DashboardPage() {
               <span className="w-[10px] h-[10px] rounded-full bg-primary mt-[5px] flex-shrink-0"></span>
               <div>
                 <strong className="block text-[14px]">Следующий шаг</strong>
-                <div className="text-text-secondary text-[13px] mt-1">Обед в Mullixhiu через 2 часа. Бронь подтверждена.</div>
+                <div className="text-text-secondary text-[13px] mt-1">
+                  {nextEvent ? `${nextEvent.title} в ${nextEvent.time}` : 'План на сегодня пуст. Добавьте активности в маршрут!'}
+                </div>
               </div>
             </div>
             <div className="flex gap-3 items-start p-[14px] rounded-[16px] bg-surface-elevated border border-border">
               <span className="w-[10px] h-[10px] rounded-full bg-[var(--ok)] mt-[5px] flex-shrink-0"></span>
               <div>
                 <strong className="block text-[14px]">Офлайн доступ</strong>
-                <div className="text-text-secondary text-[13px] mt-1">Маршрут, документы и заметки сохранены локально.</div>
+                <div className="text-text-secondary text-[13px] mt-1">
+                  {offlineDocsCount > 0 ? `${offlineDocsCount} документов доступны без интернета в дороге.` : 'Загрузите билеты и отели для офлайн-доступа.'}
+                </div>
               </div>
             </div>
             <div className="flex gap-3 items-start p-[14px] rounded-[16px] bg-surface-elevated border border-border">
               <span className="w-[10px] h-[10px] rounded-full bg-status-error mt-[5px] flex-shrink-0"></span>
               <div>
-                <strong className="block text-[14px]">Нужно проверить</strong>
-                <div className="text-text-secondary text-[13px] mt-1">Аренда авто на день 4 ещё не отмечена как оплаченная всеми.</div>
+                <strong className="block text-[14px]">Бюджет поездки</strong>
+                <div className="text-text-secondary text-[13px] mt-1">
+                  {totalSpent > totalBudget 
+                    ? `Лимит превышен на €${(totalSpent - totalBudget).toFixed(0)}!` 
+                    : `Осталось €${(totalBudget - totalSpent).toFixed(0)} свободных средств.`}
+                </div>
               </div>
             </div>
           </div>
@@ -239,7 +247,7 @@ export default async function DashboardPage() {
           <div className="grid gap-[11px]">
             {recentUpdates.map((update) => (
               <div key={update.id} className="flex gap-3 p-[14px] rounded-[16px] bg-surface-elevated border border-border">
-                <div className="w-[30px] h-[30px] rounded-[11px] flex items-center justify-center font-display font-[800] text-[11px] flex-shrink-0 text-white" 
+                <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center font-display font-[800] text-[11px] flex-shrink-0 text-white" 
                      style={{ backgroundColor: update.sender.avatarColor }}>
                   {update.sender.initials}
                 </div>

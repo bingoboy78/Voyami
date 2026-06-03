@@ -36,6 +36,7 @@ export default async function NotesPage() {
       createdAt: true,
       sender: {
         select: {
+          id: true,
           name: true,
           initials: true,
           avatarColor: true

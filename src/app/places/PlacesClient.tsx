@@ -45,51 +45,6 @@ export function PlacesClient({ tripId, initialPlaces }: { tripId: string; initia
   const [newPrice, setNewPrice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch Days
-  const fetchDays = async () => {
-    try {
-      const res = await fetch(`/api/trips`);
-      const tripData = await res.json();
-      if (tripData.trip) {
-        // Fetch days for this trip
-        const daysRes = await fetch(`/api/days?tripId=${tripId}`); // We can also fallback or get days list
-        // Wait, let's just make a simple query or let's create an endpoint/use client query.
-        // Actually, we can fetch active trip days directly. Let's make an endpoint for days if needed.
-        // Let's check how to get days: we can just fetch '/api/activities' or another route,
-        // or we can fetch a custom API endpoint '/api/trips/active-days'.
-        // Let's create an API endpoint in the next step, or just query it in api/trips!
-        // Wait, can we fetch `/api/trips` and include days?
-        // Let's check: our api/trips route returns { trip } from findFirst().
-        // We can modify api/trips route to include days: true in the GET query!
-        // That is extremely easy! Let's check:
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Let's load days list from active trip
-  useEffect(() => {
-    const loadDays = async () => {
-      try {
-        const res = await fetch('/api/trips');
-        const data = await res.json();
-        if (data.trip) {
-          // Let's fetch days list via a quick fetch to api route we will update,
-          // or let's just fetch it from the database via `/api/days?tripId=...`
-          // Let's build a clean, simple API endpoint for days or include it.
-          const daysRes = await fetch(`/api/trips`); // Wait, let's see if we can edit `/api/trips` to include days
-          const daysData = await daysRes.json();
-          // Let's make a dedicated API route or update GET `/api/trips` to include days.
-          // Let's do that in a moment.
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    loadDays();
-  }, [tripId]);
-
   // Load days list (fallback: we query it directly by fetching '/api/trips' which we'll update to return days)
   useEffect(() => {
     const fetchTripWithDays = async () => {
@@ -309,7 +264,10 @@ export function PlacesClient({ tripId, initialPlaces }: { tripId: string; initia
                   </div>
                 )}
                 <div className="flex gap-2 relative">
-                  <button className="flex-1 px-3 py-2 rounded-[13px] bg-primary/10 text-primary font-semibold border border-transparent hover:bg-primary/20 transition-all text-sm flex items-center justify-center gap-1.5">
+                  <button 
+                    onClick={() => router.push('/map')}
+                    className="flex-1 px-3 py-2 rounded-[13px] bg-primary/10 text-primary font-semibold border border-transparent hover:bg-primary/20 transition-all text-sm flex items-center justify-center gap-1.5"
+                  >
                     <MapPin className="w-4 h-4" />
                     Карта
                   </button>

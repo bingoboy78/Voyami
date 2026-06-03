@@ -4,6 +4,30 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import fs from 'fs';
 import path from 'path';
+import { cookies } from 'next/headers';
+import { USER_COOKIE_NAME } from '@/lib/user';
+
+async function getActiveUserId(): Promise<string> {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get(USER_COOKIE_NAME)?.value;
+  
+  if (userId) {
+    // Verify user exists in DB
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user) return user.id;
+  }
+  
+  // Fallback to first owner or any user
+  const defaultUser = await prisma.tripParticipant.findFirst({
+    where: { role: 'OWNER' },
+    include: { user: true }
+  }) || await prisma.tripParticipant.findFirst({
+    include: { user: true }
+  });
+  
+  if (!defaultUser) throw new Error('No users or participants found in database');
+  return defaultUser.userId;
+}
 
 export async function uploadDocumentAction(formData: FormData) {
   try {
@@ -18,9 +42,8 @@ export async function uploadDocumentAction(formData: FormData) {
     const trip = await prisma.trip.findFirst();
     if (!trip) throw new Error('Поездка не найдена');
 
-    // Find Alina as the uploader
-    const alina = await prisma.user.findFirst({ where: { name: 'Алина' } });
-    if (!alina) throw new Error('Owner Alina not found');
+    // Get active user as the uploader
+    const activeUserId = await getActiveUserId();
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -45,10 +68,10 @@ export async function uploadDocumentAction(formData: FormData) {
     const fileType = ext.toLowerCase() === '.pdf' ? 'PDF' : 'IMG';
 
     // Create Document record
-    await prisma.document.create({
+    const newDoc = await prisma.document.create({
       data: {
         tripId: trip.id,
-        uploadedById: alina.id,
+        uploadedById: activeUserId,
         title: originalName.replace(ext, ''),
         fileName: fileName,
         fileType: fileType,
@@ -56,10 +79,18 @@ export async function uploadDocumentAction(formData: FormData) {
         category: ['TICKETS', 'HOTELS', 'TRANSPORT', 'INSURANCE', 'OTHER'].includes(category) ? category : 'OTHER',
         size: file.size,
         isOfflineAvailable: true // Make offline by default
+      },
+      include: {
+        uploadedBy: {
+          select: {
+            name: true
+          }
+        }
       }
     });
 
     revalidatePath('/documents');
+    return newDoc;
   } catch (err) {
     console.error('Failed upload action:', err);
     throw err;

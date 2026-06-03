@@ -75,7 +75,11 @@ export function DocumentsClient({ initialDocs }: { initialDocs: Document[] }) {
     setSelectedDocId(tempId);
 
     try {
-      await uploadDocumentAction(formData);
+      const realDoc = await uploadDocumentAction(formData);
+      if (realDoc) {
+        setDocs(prev => prev.map(d => d.id === tempId ? (realDoc as any) : d));
+        setSelectedDocId(realDoc.id);
+      }
     } catch (err) {
       console.error('Failed to upload file:', err);
       alert('Ошибка при загрузке файла');
@@ -87,6 +91,29 @@ export function DocumentsClient({ initialDocs }: { initialDocs: Document[] }) {
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleShare = async () => {
+    if (!selectedDoc) return;
+    const url = window.location.origin + (selectedDoc.fileName.startsWith('http') || selectedDoc.fileName.startsWith('/uploads/') ? selectedDoc.fileName : `/uploads/${selectedDoc.fileName}`);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: selectedDoc.title,
+          url: url
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('Ссылка на документ скопирована в буфер обмена!');
+      } catch (err) {
+        console.error(err);
+        alert('Ссылка на документ: ' + url);
+      }
     }
   };
 
@@ -230,9 +257,13 @@ export function DocumentsClient({ initialDocs }: { initialDocs: Document[] }) {
                   >
                     Открыть
                   </button>
-                  <button className="px-2 py-1.5 rounded-[13px] bg-surface text-text-secondary border border-border hover:bg-surface-elevated transition-colors text-xs flex items-center justify-center">
+                  <a 
+                    href={doc.fileName.startsWith('http') || doc.fileName.startsWith('/uploads/') ? doc.fileName : `/uploads/${doc.fileName}`}
+                    download={doc.title}
+                    className="px-2 py-1.5 rounded-[13px] bg-surface text-text-secondary border border-border hover:bg-surface-elevated transition-colors text-xs flex items-center justify-center"
+                  >
                     <Download className="w-3.5 h-3.5" />
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
@@ -314,7 +345,10 @@ export function DocumentsClient({ initialDocs }: { initialDocs: Document[] }) {
             >
               <Download className="w-4 h-4" />
             </a>
-            <button className="px-3 py-2 rounded-[13px] bg-surface text-text-primary border border-border hover:bg-surface-elevated transition-colors text-sm">
+            <button 
+              onClick={handleShare}
+              className="px-3 py-2 rounded-[13px] bg-surface text-text-primary border border-border hover:bg-surface-elevated transition-colors text-sm"
+            >
               <Share2 className="w-4 h-4" />
             </button>
           </div>
