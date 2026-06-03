@@ -5,7 +5,7 @@ import { useIdentity } from './IdentityContext';
 import { cn } from '@/lib/utils';
 import { User, ChevronDown, Check, UserPlus } from 'lucide-react';
 
-export function IdentitySelector({ className }: { className?: string }) {
+export function IdentitySelector({ className, align = 'up' }: { className?: string; align?: 'up' | 'down' }) {
   const { currentUser, participants, loginAs } = useIdentity();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,10 @@ export function IdentitySelector({ className }: { className?: string }) {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 z-50 bg-surface border border-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-h-56 overflow-y-auto">
+        <div className={cn(
+          "absolute left-0 right-0 z-50 bg-surface border border-border rounded-xl shadow-xl overflow-hidden animate-fade-in max-h-56 overflow-y-auto",
+          align === 'down' ? "top-full mt-2" : "bottom-full mb-2"
+        )}>
           <div className="p-1.5 flex flex-col gap-0.5">
             <div className="px-2 py-1 text-[9px] font-mono font-bold tracking-wider text-text-secondary uppercase">
               Сменить участника

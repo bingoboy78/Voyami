@@ -57,7 +57,7 @@ export function Topbar() {
       </div>
       
       <div className="flex items-center gap-2 lg:gap-3">
-        <IdentitySelector className="lg:hidden w-28 text-xs shrink-0" />
+        <IdentitySelector className="lg:hidden w-28 text-xs shrink-0" align="down" />
         <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface hover:bg-surface-elevated transition-colors text-text-secondary">
           <Search className="w-5 h-5" />
         </button>

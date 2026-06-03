@@ -115,7 +115,7 @@ export function MapClient({ days, tripCountry }: MapClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-5 items-start">
       {/* Left Column: Map Visualization */}
-      <div className="bg-surface border border-border rounded-[20px] shadow-soft p-4 lg:p-5 h-full flex flex-col overflow-hidden">
+      <div className="bg-surface border border-border rounded-[20px] shadow-soft p-4 lg:p-5 lg:h-[680px] flex flex-col overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 lg:mb-5">
           <div>
             <h3 className="m-0 font-display font-[760] text-lg lg:text-xl leading-none text-text-primary">
@@ -166,15 +166,15 @@ export function MapClient({ days, tripCountry }: MapClientProps) {
           </div>
         </div>
 
-        {/* Map Container (Height reduced to 320px/350px on mobile) */}
-        <div className="relative min-h-[320px] lg:min-h-[560px] flex-grow rounded-[18px] border border-border overflow-hidden bg-surface-elevated flex items-center justify-center">
+        {/* Map Container */}
+        <div className="relative h-[380px] lg:h-full lg:flex-grow rounded-[18px] border border-border overflow-hidden bg-surface-elevated flex items-center justify-center">
           {isLoadingMap && (
             <div className="absolute inset-0 z-10 bg-surface/50 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               <span className="text-sm font-semibold text-text-secondary">Загрузка карты Google...</span>
             </div>
           )}
-          <div ref={mapRef} className="w-full h-full min-h-[320px] lg:min-h-[560px]" />
+          <div ref={mapRef} className="w-full h-full" />
         </div>
       </div>
 
